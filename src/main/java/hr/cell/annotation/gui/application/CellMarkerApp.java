@@ -32,11 +32,14 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import hr.cell.annotation.data.drawutil.objectholder.ObjectHolder;
 import hr.cell.annotation.data.graphicalobject.GraphicalObject;
 import hr.cell.annotation.data.graphicalobject.impl.RectangleGraphicalObject;
+import hr.cell.annotation.data.graphicalobject.impl.cells.FullCellMarker;
+import hr.cell.annotation.data.graphicalobject.impl.cells.PartCellMarker;
 import hr.cell.annotation.gui.application.component.PaintComponent;
 import hr.cell.annotation.gui.state.State;
 import hr.cell.annotation.gui.state.appstate.IdleState;
 import hr.cell.annotation.gui.state.appstate.MarkerState;
 import hr.cell.annotation.gui.state.appstate.SelectionState;
+import hr.cell.annotation.gui.state.appstate.SpecificSelectionCellAnnotationState;
 
 public class CellMarkerApp {
 
@@ -73,7 +76,7 @@ public class CellMarkerApp {
 
 	private void setStateMap() {
 		stateMap = new HashMap<>();
-		stateMap.put("select", new SelectionState(holder));
+		stateMap.put("select", new SpecificSelectionCellAnnotationState(holder));
 		stateMap.put("marker", new MarkerState(holder));
 		stateMap.put("idle", new IdleState());
 	}
@@ -300,7 +303,8 @@ public class CellMarkerApp {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				List<GraphicalObject> objects = new ArrayList<>();
-				objects.add(new RectangleGraphicalObject());
+				objects.add(new FullCellMarker());
+				objects.add(new PartCellMarker());
 				try {
 					CellMarkerApp gui = new CellMarkerApp(objects);
 					gui.frame.setVisible(true);

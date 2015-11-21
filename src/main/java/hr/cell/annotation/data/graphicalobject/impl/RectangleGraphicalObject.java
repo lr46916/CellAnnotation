@@ -14,22 +14,30 @@ import hr.cell.annotation.data.graphicalobject.GraphicalObjectAbs;
 
 public class RectangleGraphicalObject extends GraphicalObjectAbs {
 
-	private static final Rectangle boundingBox = new Rectangle(0, 0, 0, 0);
+	// private static final Rectangle boundingBox = new Rectangle(0, 0, 0, 0);
 	private Rectangle rectangle;
 	private Point hotPointsDiff;
+	private Color recColor = Color.red;
 
 	public RectangleGraphicalObject(int x, int y, int width, int height) {
 		super(new Point[] { new Point(x, y), new Point(x + width, y + height) });
 		hotPointsDiff = new Point();
 		rectangle = new Rectangle(x, y, width, height);
 	}
+	
+	public RectangleGraphicalObject(int x, int y, int width, int height, Color color) {
+		super(new Point[] { new Point(x, y), new Point(x + width, y + height) });
+		hotPointsDiff = new Point();
+		rectangle = new Rectangle(x, y, width, height);
+		this.recColor = color;
+	}
 
 	public RectangleGraphicalObject() {
 		super(new Point[] { new Point(), new Point() });
 		hotPointsDiff = new Point();
-		rectangle = new Rectangle(0, 0, 0, 0);
+		rectangle = new Rectangle(0, 0, 10, 10);
 	}
-
+	
 	private void updateRectangleSize(Point p1, Point p2) {
 		GeometryUtil.pointDiff(p2, p1, hotPointsDiff);
 		rectangle.setX(p1.x);
@@ -40,12 +48,13 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 
 	@Override
 	public Rectangle getBoundingBox() {
-		return boundingBox;
+		return new Rectangle(rectangle.getX() - 1, rectangle.getY() - 1, rectangle.getWidth() + 2,
+				rectangle.getHeight() + 2);
 	}
 
 	@Override
 	public void setHotPoint(int index, Point point) {
-		if(index == 1) {
+		if (index == 1) {
 			point.x = Integer.max(rectangle.getX(), point.x);
 			point.y = Integer.max(rectangle.getY(), point.y);
 		} else {
@@ -56,7 +65,7 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 		updateRectangleSize(getHotPoint(0), getHotPoint(1));
 		notifyListeners();
 	}
-	
+
 	@Override
 	public void translate(Point delta) {
 		super.translate(delta);
@@ -66,7 +75,7 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 
 	@Override
 	public double selectionDistance(Point mousePoint) {
-		if (GeometryUtil.isInsideRectangle(mousePoint, rectangle)){
+		if (GeometryUtil.isInsideRectangle(mousePoint, rectangle)) {
 			return 0;
 		}
 
@@ -106,7 +115,7 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 
 	@Override
 	public void render(Graphics2D graphics) {
-		RenderUtil.renderRectangle(rectangle, Color.RED, null, graphics);
+		RenderUtil.renderRectangle(rectangle, recColor, null, graphics);
 	}
 
 	@Override
@@ -117,7 +126,7 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 	@Override
 	public GraphicalObject duplicate() {
 		return new RectangleGraphicalObject(rectangle.getX(), rectangle.getY(), rectangle.getWidth(),
-				rectangle.getWidth());
+				rectangle.getWidth(), recColor);
 	}
 
 	@Override
