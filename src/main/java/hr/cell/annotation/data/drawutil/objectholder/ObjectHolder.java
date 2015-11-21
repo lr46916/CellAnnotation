@@ -155,7 +155,6 @@ public class ObjectHolder {
 		int len = object.getNumberOfHotPoints();
 		int index = -1;
 		for (int i = 0; i < len; i++) {
-
 			double dist = object.getHotPointDistance(i, mousePoint);
 			if (min > dist) {
 				min = dist;

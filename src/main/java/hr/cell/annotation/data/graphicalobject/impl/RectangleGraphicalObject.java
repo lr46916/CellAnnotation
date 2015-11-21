@@ -17,7 +17,6 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 	// private static final Rectangle boundingBox = new Rectangle(0, 0, 0, 0);
 	private Rectangle rectangle;
 	private Point hotPointsDiff;
-	private Color recColor = Color.red;
 
 	public RectangleGraphicalObject(int x, int y, int width, int height) {
 		super(new Point[] { new Point(x, y), new Point(x + width, y + height) });
@@ -25,17 +24,10 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 		rectangle = new Rectangle(x, y, width, height);
 	}
 	
-	public RectangleGraphicalObject(int x, int y, int width, int height, Color color) {
-		super(new Point[] { new Point(x, y), new Point(x + width, y + height) });
-		hotPointsDiff = new Point();
-		rectangle = new Rectangle(x, y, width, height);
-		this.recColor = color;
-	}
-
 	public RectangleGraphicalObject() {
 		super(new Point[] { new Point(), new Point() });
 		hotPointsDiff = new Point();
-		rectangle = new Rectangle(0, 0, 10, 10);
+		rectangle = new Rectangle(0, 0, 50, 50);
 	}
 	
 	private void updateRectangleSize(Point p1, Point p2) {
@@ -115,7 +107,7 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 
 	@Override
 	public void render(Graphics2D graphics) {
-		RenderUtil.renderRectangle(rectangle, recColor, null, graphics);
+		RenderUtil.renderRectangle(rectangle, getColor(), null, graphics);
 	}
 
 	@Override
@@ -126,7 +118,11 @@ public class RectangleGraphicalObject extends GraphicalObjectAbs {
 	@Override
 	public GraphicalObject duplicate() {
 		return new RectangleGraphicalObject(rectangle.getX(), rectangle.getY(), rectangle.getWidth(),
-				rectangle.getWidth(), recColor);
+				rectangle.getWidth());
+	}
+	
+	protected Color getColor(){
+		return Color.red;
 	}
 
 	@Override

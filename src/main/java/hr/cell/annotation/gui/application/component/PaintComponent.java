@@ -22,6 +22,7 @@ public class PaintComponent extends JComponent implements ObjectHolderListener {
 	private ObjectHolder holder;
 	private State state;
 	private Image backgroundImage;
+	public boolean changed = false;
 
 	public PaintComponent(ObjectHolder holder) {
 		super();
@@ -129,6 +130,7 @@ public class PaintComponent extends JComponent implements ObjectHolderListener {
 
 	@Override
 	public void objectsChanged() {
+		changed = true;
 		this.repaint();
 	}
 }

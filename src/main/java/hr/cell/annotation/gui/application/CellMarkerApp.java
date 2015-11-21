@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,17 +27,21 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import hr.cell.annotation.data.drawutil.objectholder.ObjectHolder;
 import hr.cell.annotation.data.graphicalobject.GraphicalObject;
+import hr.cell.annotation.data.graphicalobject.impl.CompositGraphicalObject;
 import hr.cell.annotation.data.graphicalobject.impl.RectangleGraphicalObject;
 import hr.cell.annotation.data.graphicalobject.impl.cells.FullCellMarker;
 import hr.cell.annotation.data.graphicalobject.impl.cells.PartCellMarker;
+import hr.cell.annotation.data.graphicalobject.impl.cells.TrainingExampleGraphicalObject;
 import hr.cell.annotation.gui.application.component.PaintComponent;
 import hr.cell.annotation.gui.state.State;
+import hr.cell.annotation.gui.state.appstate.AddShapeState;
 import hr.cell.annotation.gui.state.appstate.IdleState;
 import hr.cell.annotation.gui.state.appstate.MarkerState;
 import hr.cell.annotation.gui.state.appstate.SelectionState;
@@ -45,7 +51,7 @@ public class CellMarkerApp {
 
 	public static final String imgsDirPath = "images";
 	public static final String objectHolderDataPath = "annotations";
-	
+
 	private JFrame frame;
 	private ObjectHolder holder;
 	private PaintComponent paintComp;
@@ -88,7 +94,28 @@ public class CellMarkerApp {
 
 		frame = new JFrame();
 		frame.setBounds(100, 100, 450, 300);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setTitle("Image annotator");
+		frame.setVisible(true);
+		frame.setResizable(false);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				if (paintComp.changed) {
+					int result = checkSave(
+							"You wish to exit application while still having unsaved data. Do you wish to save your data?");
+					if(result == JOptionPane.CANCEL_OPTION) {
+						return;
+					} else {
+						if(result == JOptionPane.YES_OPTION) {
+							saveData();
+						}
+						frame.dispose();
+					}
+				} else {
+					frame.dispose();
+				}
+			}
+		});
 
 		initializeUserInputHandlers();
 		holder = new ObjectHolder();
@@ -97,7 +124,7 @@ public class CellMarkerApp {
 		this.frame.setFocusable(true);
 		paintComp.setFocusable(true);
 		frame.getContentPane().add(paintComp, BorderLayout.CENTER);
-		
+
 		setStateMap();
 
 		appState = stateMap.get("idle");
@@ -112,11 +139,11 @@ public class CellMarkerApp {
 			setState(stateMap.get("select"));
 		});
 
-		JButton markerButton = new JButton("annotate");
-		markerButton.addActionListener((event) -> {
-			setState(stateMap.get("marker"));
-		});
-		toolBar.add(markerButton);
+		// JButton markerButton = new JButton("annotate");
+		// markerButton.addActionListener((event) -> {
+		// setState(stateMap.get("marker"));
+		// });
+		// toolBar.add(markerButton);
 
 		JButton loadButton = new JButton("load");
 		loadButton.addActionListener((event) -> {
@@ -141,15 +168,24 @@ public class CellMarkerApp {
 			}
 		});
 		toolBar.add(saveButton);
-		
+
+		for (String name : protoMap.keySet()) {
+			JButton shapeButton = new JButton(protoMap.get(name).getShapeName());
+			shapeButton.addActionListener((event) -> {
+				setState(new AddShapeState(holder, protoMap.get(name)));
+			});
+			toolBar.add(shapeButton);
+		}
+		TrainingExampleGraphicalObject comp = new TrainingExampleGraphicalObject(new ArrayList<>());
+		protoMap.put(comp.getShapeID(), comp);
+
 		currentImageLabel = new JLabel(activeImage);
 		JPanel labelPanel = new JPanel(new BorderLayout());
 		labelPanel.add(currentImageLabel, BorderLayout.EAST);
 		frame.getContentPane().add(labelPanel, BorderLayout.SOUTH);
-		
-		
+
 		imgFileList = new File(System.getProperty("user.dir") + "/" + imgsDirPath).listFiles();
-		Arrays.sort(imgFileList, (f1,f2) -> f1.getName().compareTo(f2.getName()));
+		Arrays.sort(imgFileList, (f1, f2) -> f1.getName().compareTo(f2.getName()));
 		loadData(imgFileList[0], protoMap);
 		activeImage = imgFileList[0].getName();
 	}
@@ -176,17 +212,17 @@ public class CellMarkerApp {
 					appState = stateMap.get("idle");
 					frame.requestFocusInWindow();
 					break;
-					
+
 				case KeyEvent.VK_RIGHT:
 					int nextImgIndex = (imgFileListActiveIndex + 1) % imgFileList.length;
 					saveData();
 					loadData(imgFileList[nextImgIndex], protoMap);
 					imgFileListActiveIndex = nextImgIndex;
 					break;
-					
+
 				case KeyEvent.VK_LEFT:
 					int precImgIndex = imgFileListActiveIndex - 1;
-					if(precImgIndex < 0)
+					if (precImgIndex < 0)
 						precImgIndex += imgFileList.length;
 					saveData();
 					loadData(imgFileList[precImgIndex], protoMap);
@@ -241,6 +277,18 @@ public class CellMarkerApp {
 	}
 
 	private boolean loadData(File f, Map<String, GraphicalObject> protoMap) {
+		if (paintComp.changed) {
+			int checkSavedRes = checkSave("Loading a new document while having unsaved changes to current document"
+					+ System.lineSeparator() + "Do you wish to save changes that you made?" + System.lineSeparator()
+					+ "(clicking \"no\" will result in loosing changes you made)");
+			if (checkSavedRes == JOptionPane.CANCEL_OPTION) {
+				return false;
+			} else {
+				if (checkSavedRes == JOptionPane.YES_OPTION) {
+					saveData();
+				}
+			}
+		}
 		activeImage = f.getName();
 		try {
 			paintComp.setBGImage(ImageIO.read(f));
@@ -266,7 +314,16 @@ public class CellMarkerApp {
 		frame.pack();
 		currentImageLabel.setText(activeImage);
 		currentImageLabel.repaint();
+		paintComp.changed = false;
 		return true;
+	}
+
+	private int checkSave(String message) {
+
+		int result = JOptionPane.showConfirmDialog(frame, message);
+
+		return result;
+
 	}
 
 	private static void loadElementsFromStringStack(Stack<String> stack1, Stack<GraphicalObject> stack,
@@ -307,8 +364,6 @@ public class CellMarkerApp {
 				objects.add(new PartCellMarker());
 				try {
 					CellMarkerApp gui = new CellMarkerApp(objects);
-					gui.frame.setVisible(true);
-					gui.frame.setResizable(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

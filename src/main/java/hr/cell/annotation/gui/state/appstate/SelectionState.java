@@ -32,17 +32,19 @@ public class SelectionState implements State {
 	@Override
 	public void mouseDown(Point mousePoint, boolean shiftDown, boolean ctrlDown) {
 		if (!ctrlDown) {
+			if(selObj != null) {
+				currHPIndex = holder.findSelectedHotPoint(selObj, mousePoint);
+				if(currHPIndex != -1)
+					return;
+			}
 			selObj = holder.findSelectedGraphicalObject(mousePoint);
 			if (shiftDown) {
 				translatationStartPoint = mousePoint;
 			} else {
 				translatationStartPoint = null;
 			}
-			if (selObj != null) {
-				selectedObjects.add(selObj);
-			} else {
-				selectedObjects.clear();
-			}
+			selectedObjects.clear();
+			selectedObjects.add(selObj);
 		} else {
 			selObj = holder.findSelectedGraphicalObject(mousePoint);
 			selectedObjects.add(selObj);
